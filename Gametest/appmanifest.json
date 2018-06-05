@@ -1,6 +1,6 @@
 ﻿{
-	"name": "New project",
-	"short_name": "New project",
+	"name": "Кто ты, Кто я, Кто вы",
+	"short_name": "Кто ты, Кто я, Кто вы",
 	"start_url": "index.html",
 	"display": "fullscreen",
 	"orientation": "portrait",
