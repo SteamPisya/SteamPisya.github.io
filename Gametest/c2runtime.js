@@ -18214,6 +18214,8 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.TiledBg,
 	cr.behaviors.DragnDrop,
 	cr.behaviors.Sin,
+	cr.system_object.prototype.cnds.OnLayoutStart,
+	cr.plugins_.PerfectAds.prototype.acts.LoadInterstitial,
 	cr.system_object.prototype.cnds.EveryTick,
 	cr.behaviors.DragnDrop.prototype.cnds.IsDragging,
 	cr.plugins_.Sprite.prototype.acts.SetPos,
@@ -18226,5 +18228,6 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.Sprite.prototype.cnds.CompareFrame,
 	cr.system_object.prototype.cnds.TriggerOnce,
 	cr.system_object.prototype.acts.AddVar,
-	cr.plugins_.Sprite.prototype.acts.SetVisible
+	cr.plugins_.Sprite.prototype.acts.SetVisible,
+	cr.plugins_.PerfectAds.prototype.acts.ShowInterstitial
 ];};
