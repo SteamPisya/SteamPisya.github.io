@@ -18208,9 +18208,9 @@ cr.behaviors.Sin = function(runtime)
 	behaviorProto.exps = new Exps();
 }());
 cr.getObjectRefTable = function () { return [
-	cr.plugins_.Text,
-	cr.plugins_.Sprite,
 	cr.plugins_.PerfectAds,
+	cr.plugins_.Sprite,
+	cr.plugins_.Text,
 	cr.plugins_.TiledBg,
 	cr.behaviors.DragnDrop,
 	cr.behaviors.Sin,
@@ -18229,5 +18229,8 @@ cr.getObjectRefTable = function () { return [
 	cr.system_object.prototype.cnds.TriggerOnce,
 	cr.system_object.prototype.acts.AddVar,
 	cr.plugins_.Sprite.prototype.acts.SetVisible,
-	cr.plugins_.PerfectAds.prototype.acts.ShowInterstitial
+	cr.system_object.prototype.acts.GoToLayout,
+	cr.plugins_.Sprite.prototype.cnds.CompareY,
+	cr.plugins_.Sprite.prototype.cnds.CompareX,
+	cr.system_object.prototype.exps.choose
 ];};
