@@ -15141,6 +15141,289 @@ cr.system_object.prototype.loadFromJSON = function (o)
 	};
 })();
 cr.shaders = {};
+cr.plugins_.PerfectAds = function (runtime)
+{
+    this.runtime = runtime;
+};
+(function ()
+{
+    var pluginProto = cr.plugins_.PerfectAds.prototype;
+    pluginProto.Type = function (plugin)
+    {
+        this.plugin = plugin;
+        this.runtime = plugin.runtime;
+    };
+    var typeProto = pluginProto.Type.prototype;
+    typeProto.onCreate = function ()
+    {
+    };
+    pluginProto.Instance = function (type)
+    {
+        this.type = type;
+        this.runtime = type.runtime;
+    };
+    var instanceProto = pluginProto.Instance.prototype;
+    instanceProto.onCreate = function ()
+    {
+        if ( ! this.isValidDevice()) return;
+        this.isVideoLoaded = false;
+        this.errorMsg = "";
+        this.debugData = "";
+        this.isShowingBanner = false;
+        this.isBannerLoaded = false;
+        this.isShowingInterstitial = false;
+        this.isInterstitialLoaded = false;
+        this.isShowingRewardInterstitial = false;
+        var testUnit =
+        {
+            ANDROID:
+            {
+                BANNER: "ca-app-pub-3940256099942544/6300978111",
+                INTERSTITIAL: "ca-app-pub-3940256099942544/1033173712",
+                REWARDED: "ca-app-pub-3940256099942544/5224354917"
+            },
+            IOS:
+            {
+                BANNER: "ca-app-pub-3940256099942544/6300978111",
+                INTERSTITIAL: "ca-app-pub-3940256099942544/1033173712",
+                REWARDED: "ca-app-pub-3940256099942544/1712485313"
+            }
+        };
+        var isTestMode = !!this.properties[8];
+        this.bannerSize = this.runtime.isAndroid ? this.properties[1] : this.properties[5];
+        this.bannerAdUnit = this.runtime.isAndroid ? this.properties[0] : this.properties[4];
+        this.interstitialAdUnit = this.runtime.isAndroid ? this.properties[2] : this.properties[6];
+        this.rewardedVideoAdUnit = this.runtime.isAndroid ? this.properties[3] : this.properties[7];
+        switch (this.bannerSize)
+        {
+            case 0: this.bannerSize = "SMART"; break;
+            case 1: this.bannerSize = "BANNER"; break;
+            case 2: this.bannerSize = "MEDIUM_REC"; break;
+            case 3: this.bannerSize = "LEADERBOARD"; break;
+        }
+        if (isTestMode || ! this.bannerAdUnit)
+        {
+            this.bannerAdUnit = this.runtime.isAndroid ? testUnit.ANDROID.BANNER : testUnit.IOS.BANNER;
+        }
+        if (isTestMode || ! this.interstitialAdUnit)
+        {
+            this.interstitialAdUnit = this.runtime.isAndroid ? testUnit.ANDROID.INTERSTITIAL : testUnit.IOS.INTERSTITIAL;
+        }
+        if (isTestMode || ! this.rewardedVideoAdUnit)
+        {
+            this.rewardedVideoAdUnit = this.runtime.isAndroid ? testUnit.ANDROID.REWARDED : testUnit.IOS.REWARDED;
+        }
+        this.banner = window["Cocoon"]["Ad"]["createBanner"](this.bannerAdUnit.trim(), this.bannerSize);
+        this.interstitial = window["Cocoon"]["Ad"]["createInterstitial"](this.interstitialAdUnit.trim());
+        this.rewardedVideo = window["Cocoon"]["Ad"]["createRewardedVideo"](this.rewardedVideoAdUnit.trim());
+        var self = this;
+        this.banner["on"]("show", function ()
+        {
+            self.isShowingBanner = true;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnBannerShown, self);
+        });
+        this.banner["on"]("load", function ()
+        {
+            self.isBannerLoaded = true;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnBannerLoaded, self);
+        });
+        this.banner["on"]("click", function ()
+        {
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnBannerClicked, self);
+        });
+        this.banner["on"]("fail", function ()
+        {
+            self.isBannerLoaded = false;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnBannerFailed, self);
+        });
+        this.banner["on"]("dismiss", function ()
+        {
+            self.isShowingBanner = false;
+            self.isBannerLoaded = false;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnBannerDismissed, self);
+        });
+        this.interstitial["on"]("show", function ()
+        {
+            self.isShowingInterstitial = true;
+            self.isInterstitialLoaded = false;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnInterstitialShown, self);
+        });
+        this.interstitial["on"]("load", function ()
+        {
+            self.isInterstitialLoaded = true;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnInterstitialLoaded, self);
+        });
+        this.interstitial["on"]("click", function ()
+        {
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnInterstitialClicked, self);
+        });
+        this.interstitial["on"]("fail", function ()
+        {
+            self.isInterstitialLoaded = false;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnInterstitialFailed, self);
+        });
+        this.interstitial["on"]("dismiss", function ()
+        {
+            self.isShowingInterstitial = false;
+            self.isInterstitialLoaded = false;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnInterstitialDismissed, self);
+        });
+        this.rewardedVideo["on"]("show", function ()
+        {
+            self.isShowingRewardInterstitial = true;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnRewardInterstitialShown, self);
+        });
+        this.rewardedVideo["on"]("load", function ()
+        {
+            self.isVideoLoaded = true;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnRewardInterstitialLoaded, self);
+        });
+        this.rewardedVideo["on"]("click", function ()
+        {
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnRewardInterstitialClicked, self);
+        });
+        this.rewardedVideo["on"]("fail", function ()
+        {
+            self.isVideoLoaded = false;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnRewardInterstitialFailed, self);
+        });
+        this.rewardedVideo["on"]("dismiss", function ()
+        {
+            self.isShowingRewardInterstitial = false;
+            self.isVideoLoaded = false;
+            self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnRewardInterstitialDismissed, self);
+        });
+        this.rewardedVideo["on"]("reward", function (reward_, error_)
+        {
+            self.isShowingRewardInterstitial = false;
+            self.isVideoLoaded = false;
+            if ( ! error_)
+            {
+                self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnRewardInterstitialSucceeded, self);
+            }
+            else
+            {
+                self.errorMsg = error_;
+                self.runtime.trigger(cr.plugins_.PerfectAds.prototype.cnds.OnRewardInterstitialStopped, self);
+            }
+        });
+    };
+    instanceProto.isValidDevice = function()
+    {
+        return ((this.runtime.isAndroid || this.runtime.isiOS) && ! cr.is_undefined(window["Cocoon"]));
+    };
+    function Cnds() {}
+    Cnds.prototype.OnBannerShown = function () { return true; };
+    Cnds.prototype.OnBannerLoaded = function () { return true; };
+    Cnds.prototype.OnBannerClicked = function () { return true; };
+    Cnds.prototype.OnBannerFailed = function () { return true; };
+    Cnds.prototype.OnBannerDismissed = function () { return true; };
+    Cnds.prototype.IsShowingBanner = function () { return this.isShowingBanner; };
+    Cnds.prototype.IsBannerLoaded = function () { return this.isBannerLoaded; };
+    Cnds.prototype.OnInterstitialShown = function () { return true; };
+    Cnds.prototype.OnInterstitialLoaded = function () { return true; };
+    Cnds.prototype.OnInterstitialClicked = function () { return true; };
+    Cnds.prototype.OnInterstitialFailed = function () { return true; };
+    Cnds.prototype.OnInterstitialDismissed = function () { return true; };
+    Cnds.prototype.IsShowingInterstitial = function () { return this.isShowingInterstitial; };
+    Cnds.prototype.IsInterstitialLoaded = function () { return this.isInterstitialLoaded; };
+	Cnds.prototype.OnRewardInterstitialShown = function () { return true; };
+    Cnds.prototype.OnRewardInterstitialLoaded = function () { return true; };
+    Cnds.prototype.OnRewardInterstitialClicked = function () { return true; };
+    Cnds.prototype.OnRewardInterstitialFailed = function () { return true; };
+    Cnds.prototype.OnRewardInterstitialDismissed = function () { return true; };
+    Cnds.prototype.OnRewardInterstitialSucceeded = function () { return true; };
+    Cnds.prototype.OnRewardInterstitialStopped = function () { return true; };
+    Cnds.prototype.IsShowingRewardInterstitial = function () { return this.isShowingRewardInterstitial; };
+    Cnds.prototype.IsVideoLoaded = function () { return this.isVideoLoaded; };
+    pluginProto.cnds = new Cnds();
+    function Acts() {}
+    Acts.prototype.ShowRewardInterstitial = function ()
+    {
+        if ( ! this.isValidDevice()) return;
+        if (this.isVideoLoaded)
+            this.rewardedVideo["show"]();
+        else
+            this.rewardedVideo["load"]();
+    };
+    Acts.prototype.LoadRewardInterstitial = function ()
+    {
+        if ( ! this.isValidDevice()) return;
+        this.rewardedVideo["load"]();
+    };
+    Acts.prototype.ShowBanner = function ()
+    {
+        if ( ! this.isValidDevice()) return;
+        if (this.isBannerLoaded)
+        {
+            this.isShowingBanner = true;
+            this.banner["show"]();
+        }
+        else
+        {
+            this.banner["load"]();
+        }
+    };
+    Acts.prototype.HideBanner = function ()
+    {
+        if ( ! this.isValidDevice()) return;
+        if (this.isBannerLoaded)
+        {
+            this.isShowingBanner = false;
+            this.banner["hide"]();
+        }
+    };
+    Acts.prototype.LoadBanner = function ()
+    {
+        if ( ! this.isValidDevice()) return;
+        this.banner["load"]();
+    };
+    Acts.prototype.SetLayout = function (layout)
+    {
+        if ( ! this.isValidDevice()) return;
+        var bannerLayout;
+        switch (layout)
+        {
+            case 0:
+                bannerLayout = "TOP_CENTER";
+                break;
+            case 1:
+                bannerLayout = "BOTTOM_CENTER";
+                break;
+            case 2:
+                bannerLayout = "CUSTOM";
+                break;
+        }
+        this.banner["setLayout"](bannerLayout);
+    };
+    Acts.prototype.SetPosition = function (x, y)
+    {
+        if ( ! this.isValidDevice()) return;
+        this.banner["setPosition"](x, y);
+    };
+    Acts.prototype.ShowInterstitial = function ()
+    {
+        if ( ! this.isValidDevice()) return;
+        if (this.isInterstitialLoaded)
+            this.interstitial["show"]();
+        else
+            this.interstitial["load"]();
+    };
+    Acts.prototype.LoadInterstitial = function ()
+    {
+        if ( ! this.isValidDevice()) return;
+        this.interstitial["load"]();
+    };
+    pluginProto.acts = new Acts();
+    function Exps()
+    {
+    };
+    Exps.prototype.LastError = function (ret)
+    {
+        ret.set_any(this.errorMsg);
+    };
+    pluginProto.exps = new Exps();
+}());
 ;
 ;
 cr.plugins_.Sprite = function(runtime)
@@ -17420,18 +17703,328 @@ cr.behaviors.DragnDrop = function(runtime)
 	function Exps() {};
 	behaviorProto.exps = new Exps();
 }());
+;
+;
+cr.behaviors.Sin = function(runtime)
+{
+	this.runtime = runtime;
+};
+(function ()
+{
+	var behaviorProto = cr.behaviors.Sin.prototype;
+	behaviorProto.Type = function(behavior, objtype)
+	{
+		this.behavior = behavior;
+		this.objtype = objtype;
+		this.runtime = behavior.runtime;
+	};
+	var behtypeProto = behaviorProto.Type.prototype;
+	behtypeProto.onCreate = function()
+	{
+	};
+	behaviorProto.Instance = function(type, inst)
+	{
+		this.type = type;
+		this.behavior = type.behavior;
+		this.inst = inst;				// associated object instance to modify
+		this.runtime = type.runtime;
+		this.i = 0;		// period offset (radians)
+	};
+	var behinstProto = behaviorProto.Instance.prototype;
+	var _2pi = 2 * Math.PI;
+	var _pi_2 = Math.PI / 2;
+	var _3pi_2 = (3 * Math.PI) / 2;
+	behinstProto.onCreate = function()
+	{
+		this.active = (this.properties[0] === 1);
+		this.movement = this.properties[1]; // 0=Horizontal|1=Vertical|2=Size|3=Width|4=Height|5=Angle|6=Opacity|7=Value only
+		this.wave = this.properties[2];		// 0=Sine|1=Triangle|2=Sawtooth|3=Reverse sawtooth|4=Square
+		this.period = this.properties[3];
+		this.period += Math.random() * this.properties[4];								// period random
+		if (this.period === 0)
+			this.i = 0;
+		else
+		{
+			this.i = (this.properties[5] / this.period) * _2pi;								// period offset
+			this.i += ((Math.random() * this.properties[6]) / this.period) * _2pi;			// period offset random
+		}
+		this.mag = this.properties[7];													// magnitude
+		this.mag += Math.random() * this.properties[8];									// magnitude random
+		this.initialValue = 0;
+		this.initialValue2 = 0;
+		this.ratio = 0;
+		this.init();
+	};
+	behinstProto.saveToJSON = function ()
+	{
+		return {
+			"i": this.i,
+			"a": this.active,
+			"mv": this.movement,
+			"w": this.wave,
+			"p": this.period,
+			"mag": this.mag,
+			"iv": this.initialValue,
+			"iv2": this.initialValue2,
+			"r": this.ratio,
+			"lkv": this.lastKnownValue,
+			"lkv2": this.lastKnownValue2
+		};
+	};
+	behinstProto.loadFromJSON = function (o)
+	{
+		this.i = o["i"];
+		this.active = o["a"];
+		this.movement = o["mv"];
+		this.wave = o["w"];
+		this.period = o["p"];
+		this.mag = o["mag"];
+		this.initialValue = o["iv"];
+		this.initialValue2 = o["iv2"] || 0;
+		this.ratio = o["r"];
+		this.lastKnownValue = o["lkv"];
+		this.lastKnownValue2 = o["lkv2"] || 0;
+	};
+	behinstProto.init = function ()
+	{
+		switch (this.movement) {
+		case 0:		// horizontal
+			this.initialValue = this.inst.x;
+			break;
+		case 1:		// vertical
+			this.initialValue = this.inst.y;
+			break;
+		case 2:		// size
+			this.initialValue = this.inst.width;
+			this.ratio = this.inst.height / this.inst.width;
+			break;
+		case 3:		// width
+			this.initialValue = this.inst.width;
+			break;
+		case 4:		// height
+			this.initialValue = this.inst.height;
+			break;
+		case 5:		// angle
+			this.initialValue = this.inst.angle;
+			this.mag = cr.to_radians(this.mag);		// convert magnitude from degrees to radians
+			break;
+		case 6:		// opacity
+			this.initialValue = this.inst.opacity;
+			break;
+		case 7:
+			this.initialValue = 0;
+			break;
+		case 8:		// forwards/backwards
+			this.initialValue = this.inst.x;
+			this.initialValue2 = this.inst.y;
+			break;
+		default:
+;
+		}
+		this.lastKnownValue = this.initialValue;
+		this.lastKnownValue2 = this.initialValue2;
+	};
+	behinstProto.waveFunc = function (x)
+	{
+		x = x % _2pi;
+		switch (this.wave) {
+		case 0:		// sine
+			return Math.sin(x);
+		case 1:		// triangle
+			if (x <= _pi_2)
+				return x / _pi_2;
+			else if (x <= _3pi_2)
+				return 1 - (2 * (x - _pi_2) / Math.PI);
+			else
+				return (x - _3pi_2) / _pi_2 - 1;
+		case 2:		// sawtooth
+			return 2 * x / _2pi - 1;
+		case 3:		// reverse sawtooth
+			return -2 * x / _2pi + 1;
+		case 4:		// square
+			return x < Math.PI ? -1 : 1;
+		};
+		return 0;
+	};
+	behinstProto.tick = function ()
+	{
+		var dt = this.runtime.getDt(this.inst);
+		if (!this.active || dt === 0)
+			return;
+		if (this.period === 0)
+			this.i = 0;
+		else
+		{
+			this.i += (dt / this.period) * _2pi;
+			this.i = this.i % _2pi;
+		}
+		this.updateFromPhase();
+	};
+	behinstProto.updateFromPhase = function ()
+	{
+		switch (this.movement) {
+		case 0:		// horizontal
+			if (this.inst.x !== this.lastKnownValue)
+				this.initialValue += this.inst.x - this.lastKnownValue;
+			this.inst.x = this.initialValue + this.waveFunc(this.i) * this.mag;
+			this.lastKnownValue = this.inst.x;
+			break;
+		case 1:		// vertical
+			if (this.inst.y !== this.lastKnownValue)
+				this.initialValue += this.inst.y - this.lastKnownValue;
+			this.inst.y = this.initialValue + this.waveFunc(this.i) * this.mag;
+			this.lastKnownValue = this.inst.y;
+			break;
+		case 2:		// size
+			this.inst.width = this.initialValue + this.waveFunc(this.i) * this.mag;
+			this.inst.height = this.inst.width * this.ratio;
+			break;
+		case 3:		// width
+			this.inst.width = this.initialValue + this.waveFunc(this.i) * this.mag;
+			break;
+		case 4:		// height
+			this.inst.height = this.initialValue + this.waveFunc(this.i) * this.mag;
+			break;
+		case 5:		// angle
+			if (this.inst.angle !== this.lastKnownValue)
+				this.initialValue = cr.clamp_angle(this.initialValue + (this.inst.angle - this.lastKnownValue));
+			this.inst.angle = cr.clamp_angle(this.initialValue + this.waveFunc(this.i) * this.mag);
+			this.lastKnownValue = this.inst.angle;
+			break;
+		case 6:		// opacity
+			this.inst.opacity = this.initialValue + (this.waveFunc(this.i) * this.mag) / 100;
+			if (this.inst.opacity < 0)
+				this.inst.opacity = 0;
+			else if (this.inst.opacity > 1)
+				this.inst.opacity = 1;
+			break;
+		case 8:		// forwards/backwards
+			if (this.inst.x !== this.lastKnownValue)
+				this.initialValue += this.inst.x - this.lastKnownValue;
+			if (this.inst.y !== this.lastKnownValue2)
+				this.initialValue2 += this.inst.y - this.lastKnownValue2;
+			this.inst.x = this.initialValue + Math.cos(this.inst.angle) * this.waveFunc(this.i) * this.mag;
+			this.inst.y = this.initialValue2 + Math.sin(this.inst.angle) * this.waveFunc(this.i) * this.mag;
+			this.lastKnownValue = this.inst.x;
+			this.lastKnownValue2 = this.inst.y;
+			break;
+		}
+		this.inst.set_bbox_changed();
+	};
+	behinstProto.onSpriteFrameChanged = function (prev_frame, next_frame)
+	{
+		switch (this.movement) {
+		case 2:	// size
+			this.initialValue *= (next_frame.width / prev_frame.width);
+			this.ratio = next_frame.height / next_frame.width;
+			break;
+		case 3:	// width
+			this.initialValue *= (next_frame.width / prev_frame.width);
+			break;
+		case 4:	// height
+			this.initialValue *= (next_frame.height / prev_frame.height);
+			break;
+		}
+	};
+	function Cnds() {};
+	Cnds.prototype.IsActive = function ()
+	{
+		return this.active;
+	};
+	Cnds.prototype.CompareMovement = function (m)
+	{
+		return this.movement === m;
+	};
+	Cnds.prototype.ComparePeriod = function (cmp, v)
+	{
+		return cr.do_cmp(this.period, cmp, v);
+	};
+	Cnds.prototype.CompareMagnitude = function (cmp, v)
+	{
+		if (this.movement === 5)
+			return cr.do_cmp(this.mag, cmp, cr.to_radians(v));
+		else
+			return cr.do_cmp(this.mag, cmp, v);
+	};
+	Cnds.prototype.CompareWave = function (w)
+	{
+		return this.wave === w;
+	};
+	behaviorProto.cnds = new Cnds();
+	function Acts() {};
+	Acts.prototype.SetActive = function (a)
+	{
+		this.active = (a === 1);
+	};
+	Acts.prototype.SetPeriod = function (x)
+	{
+		this.period = x;
+	};
+	Acts.prototype.SetMagnitude = function (x)
+	{
+		this.mag = x;
+		if (this.movement === 5)	// angle
+			this.mag = cr.to_radians(this.mag);
+	};
+	Acts.prototype.SetMovement = function (m)
+	{
+		if (this.movement === 5)
+			this.mag = cr.to_degrees(this.mag);
+		this.movement = m;
+		this.init();
+	};
+	Acts.prototype.SetWave = function (w)
+	{
+		this.wave = w;
+	};
+	Acts.prototype.SetPhase = function (x)
+	{
+		this.i = (x * _2pi) % _2pi;
+		this.updateFromPhase();
+	};
+	Acts.prototype.UpdateInitialState = function ()
+	{
+		this.init();
+	};
+	behaviorProto.acts = new Acts();
+	function Exps() {};
+	Exps.prototype.CyclePosition = function (ret)
+	{
+		ret.set_float(this.i / _2pi);
+	};
+	Exps.prototype.Period = function (ret)
+	{
+		ret.set_float(this.period);
+	};
+	Exps.prototype.Magnitude = function (ret)
+	{
+		if (this.movement === 5)	// angle
+			ret.set_float(cr.to_degrees(this.mag));
+		else
+			ret.set_float(this.mag);
+	};
+	Exps.prototype.Value = function (ret)
+	{
+		ret.set_float(this.waveFunc(this.i) * this.mag);
+	};
+	behaviorProto.exps = new Exps();
+}());
 cr.getObjectRefTable = function () { return [
-	cr.plugins_.Sprite,
 	cr.plugins_.Text,
+	cr.plugins_.Sprite,
+	cr.plugins_.PerfectAds,
 	cr.behaviors.DragnDrop,
+	cr.behaviors.Sin,
 	cr.system_object.prototype.cnds.EveryTick,
 	cr.behaviors.DragnDrop.prototype.cnds.IsDragging,
 	cr.plugins_.Sprite.prototype.acts.SetPos,
 	cr.system_object.prototype.exps.lerp,
 	cr.plugins_.Sprite.prototype.exps.X,
 	cr.plugins_.Sprite.prototype.exps.Y,
-	cr.plugins_.Text.prototype.acts.SetText,
-	cr.plugins_.Sprite.prototype.cnds.OnCollision,
+	cr.plugins_.Sprite.prototype.cnds.IsOverlapping,
 	cr.plugins_.Sprite.prototype.cnds.CompareFrame,
-	cr.system_object.prototype.acts.AddVar
+	cr.system_object.prototype.cnds.TriggerOnce,
+	cr.system_object.prototype.acts.AddVar,
+	cr.plugins_.Sprite.prototype.acts.SetAnimFrame,
+	cr.plugins_.Sprite.prototype.exps.AnimationFrame
 ];};
