@@ -18943,13 +18943,12 @@ cr.behaviors.Sin = function(runtime)
 cr.getObjectRefTable = function () { return [
 	cr.plugins_.ATPAds,
 	cr.plugins_.Browser,
+	cr.plugins_.TiledBg,
 	cr.plugins_.Text,
 	cr.plugins_.Sprite,
-	cr.plugins_.TiledBg,
 	cr.behaviors.DragnDrop,
 	cr.behaviors.Sin,
 	cr.system_object.prototype.cnds.OnLayoutStart,
-	cr.plugins_.ATPAds.prototype.acts.LoadInterstitial,
 	cr.system_object.prototype.cnds.EveryTick,
 	cr.behaviors.DragnDrop.prototype.cnds.IsDragging,
 	cr.plugins_.Sprite.prototype.acts.SetPos,
@@ -18967,7 +18966,6 @@ cr.getObjectRefTable = function () { return [
 	cr.plugins_.Sprite.prototype.cnds.CompareY,
 	cr.plugins_.Sprite.prototype.cnds.CompareX,
 	cr.system_object.prototype.exps.choose,
-	cr.plugins_.ATPAds.prototype.acts.ShowInterstitial,
 	cr.system_object.prototype.acts.SetVar,
 	cr.plugins_.Browser.prototype.acts.GoToURL
 ];};
